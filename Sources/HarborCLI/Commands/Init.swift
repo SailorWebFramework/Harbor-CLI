@@ -1,27 +1,25 @@
 import ArgumentParser
-import CompassUtils
+import HarborUtils
 import Foundation
 import ANSITerminal
 
 var cwd: String = getCurrentWorkingDirectory()
-var url: String = "https://github.com/SailorWebFramework/ExampleProject" 
+var templateURL: String = "https://github.com/bitesomthing/harbor-template"
 
 struct Init: AsyncParsableCommand {
 
     static let configuration = CommandConfiguration(
-        abstract: "Initialize a new Sailor project"
+        abstract: "Initialize a new Harbor project"
     )
 
-    @Argument var name = ""
-    // @Flag(help: "Enable tailwind in Sailor project") var tailwind: Bool = false
-    
+    @Argument(help: "Name of the project to create") var name = ""
+
     mutating func run() async throws {
 
         cursorOff()
-        clearScreen() /// needed sometimes or else behavior is weird: i.e formatting is messed up in terminal output... suspect there's some buffer not being properly cleared? idk
+        clearScreen()
 
         if name == "" {
-            /* TODO: figure out ask() from AnsiTerminal... or maybe not bc it breaks the program */
             print("Please enter a name for your project: ")
             guard let name: String = Swift.readLine(strippingNewline: true) else {
                 print("Error, invalid name")
@@ -29,7 +27,7 @@ struct Init: AsyncParsableCommand {
             }
             self.name = name
         } else {
-            print("Initializing project: \(name)\n")
+            print("Initializing Harbor project: \(name)\n")
         }
 
         /* Check if valid destination */
@@ -39,35 +37,35 @@ struct Init: AsyncParsableCommand {
             return
         }
 
-        /* Clone starter Code */
-        do {        
+        /* Clone starter code */
+        do {
             print("\nInitializing...\n")
-            try await cloneRepositoryAsync(url: url, destinationPath: destinationPath)
+            try await cloneRepositoryAsync(url: templateURL, destinationPath: destinationPath)
             try removeGitDirectory(atPath: destinationPath)
         } catch {
             print("Error: \(error)")
         }
 
-        /* Change YOURNAME to the name of the project in package.swift */
+        /* Replace template name with project name in Package.swift */
         let packagePath = destinationPath + "/Package.swift"
         do {
             let packageContents = try String(contentsOfFile: packagePath, encoding: .utf8)
-            let newPackageContents = packageContents.replacingOccurrences(of: "ExampleProject", with: name)
+            let newPackageContents = packageContents.replacingOccurrences(of: "HarborTemplate", with: name)
             try newPackageContents.write(toFile: packagePath, atomically: true, encoding: .utf8)
         } catch {
             print("Error: \(error)")
         }
 
-        print("Done! Your project is ready at ./\(name)\n")
+        print("Done! Your Harbor project is ready at ./\(name)\n")
         let steps = [
             "cd \(name)",
-            "compass dev",
+            "harbor run web",
         ]
         print("Next steps:\n".bold)
         for (index, step) in steps.enumerated() {
             print("\(index + 1):".bold + " \(step)".asBlue)
         }
 
-        print("\nTo close the dev server, press " + "Ctrl + C\n".bold)
+        print("\nTo stop the dev server, press " + "Ctrl + C\n".bold)
     }
 }

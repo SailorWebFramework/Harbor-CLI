@@ -10,10 +10,10 @@ build:
 
 install: build
 	install -d "$(bindir)"
-	install ".build/release/Compass" "$(bindir)"
+	install ".build/release/harbor" "$(bindir)"
 
 uninstall:
-	$(RM) -rf "$(bindir)/Compass"
+	$(RM) -rf "$(bindir)/harbor"
 
 clean:
 	$(RM) -rf .build
