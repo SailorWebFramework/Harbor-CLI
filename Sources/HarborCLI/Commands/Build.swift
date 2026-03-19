@@ -22,17 +22,45 @@ extension Build {
         var output: String = "dist"
 
         func run() async throws {
-            print("harbor build web")
-            print("Building web target for production...")
-            print("[Not yet implemented] This will:")
-            print("  1. Build WASM in release mode (swift build -c release --triple wasm32-unknown-wasi)")
-            print("  2. Run wasm-opt for size optimization")
-            print("  3. Run Tailwind CSS with --minify")
-            print("  4. Copy assets to '\(output)/' directory")
-            print("  5. Generate index.html with production paths")
-            print("")
-            print("For now, run manually:")
-            print("  swift build -c release --triple wasm32-unknown-wasi")
+            let projectDir = getCurrentWorkingDirectory()
+            let tailwind = TailwindManager(projectDir: projectDir)
+
+            // Step 1: Build WASM in release mode
+            print("Building WASM target (release)...")
+            let buildOk = try await shellCommand(
+                "/usr/bin/env",
+                arguments: ["swift", "build", "-c", "release", "--triple", "wasm32-unknown-wasi"],
+                workingDirectory: projectDir
+            )
+            guard buildOk else {
+                print("Error: WASM build failed.")
+                throw ExitCode.failure
+            }
+            print("WASM build complete.\n")
+
+            // Step 2: Tailwind CSS (single build, minified)
+            if tailwind.isFleetTailwindPresent() {
+                let wasmDir = projectDir + "/.build/wasm32-unknown-wasi/release"
+                try tailwind.extractClasses(wasmDir: wasmDir)
+
+                let outputDir = projectDir + "/" + output
+                let ok = try await tailwind.build(outputDir: outputDir, minify: true)
+                if ok {
+                    print("Tailwind CSS build complete.\n")
+                } else {
+                    print("Warning: Tailwind CSS build had issues.\n")
+                }
+            } else {
+                print("Fleet-Tailwind not detected, skipping Tailwind CSS.\n")
+            }
+
+            // Step 3: Copy build artifacts to output directory
+            let outputDir = projectDir + "/" + output
+            if !fileExists(atPath: outputDir) {
+                try createDirectory(atPath: outputDir)
+            }
+
+            print("Production build written to '\(output)/'")
         }
     }
 }

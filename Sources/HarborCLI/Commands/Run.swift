@@ -25,6 +25,7 @@ extension Run {
 
         func run() async throws {
             let projectDir = getCurrentWorkingDirectory()
+            let tailwind = TailwindManager(projectDir: projectDir)
 
             // Step 1: Build WASM target
             print("Building WASM target...")
@@ -39,32 +40,28 @@ extension Run {
             }
             print("WASM build complete.\n")
 
-            // Step 2: Extract strings for Tailwind content scanning
-            let wasmDir = projectDir + "/.build/wasm32-unknown-wasi/debug"
-            print("Scanning WASM artifacts for Tailwind class names in \(wasmDir)...")
-            // Placeholder: in the future, parse .wasm binary for string literals
-            // For now Tailwind's content glob in tailwind.config.js handles this
+            // Step 2: Tailwind CSS integration (if Fleet-Tailwind is a dependency)
+            var tailwindProcess: Process? = nil
 
-            // Step 3: Run Tailwind CLI if available
-            let tailwindBinary = projectDir + "/tailwindcss"
-            if fileExists(atPath: tailwindBinary) {
-                print("Running Tailwind CSS...")
-                let _ = try await shellCommand(
-                    tailwindBinary,
-                    arguments: [
-                        "-i", "Sources/Resources/input.css",
-                        "-o", "Sources/Resources/main.css",
-                        "--minify"
-                    ],
-                    workingDirectory: projectDir
-                )
-                print("Tailwind CSS build complete.\n")
+            if tailwind.isFleetTailwindPresent() {
+                let wasmDir = projectDir + "/.build/wasm32-unknown-wasi/debug"
+
+                // Extract class names from the WASM binary
+                try tailwind.extractClasses(wasmDir: wasmDir)
+
+                if tailwind.hasTailwindBinary {
+                    // Start Tailwind in watch mode
+                    tailwindProcess = try tailwind.startWatch()
+                    print("Tailwind CSS watching for changes.\n")
+                } else {
+                    print("Fleet-Tailwind detected but tailwindcss binary not found.")
+                    print("Run 'harbor install tailwind' to set up the Tailwind CLI.\n")
+                }
             } else {
-                print("Tailwind binary not found at \(tailwindBinary), skipping CSS build.")
-                print("Run 'harbor install tailwind' to set up Tailwind CSS.\n")
+                print("Fleet-Tailwind not detected, skipping Tailwind CSS.\n")
             }
 
-            // Step 4: Start dev server (shell out to vite or basic HTTP server)
+            // Step 3: Start dev server
             print("Starting dev server on port \(port)...")
             print("(Press Ctrl+C to stop)\n")
 
@@ -78,15 +75,16 @@ extension Run {
             if viteConfigExists {
                 serverProcess.arguments = ["npx", "vite", "--port", "\(port)"]
             } else {
-                // Fallback: simple Python HTTP server for static files
-                serverProcess.arguments = ["python3", "-m", "http.server", "\(port)", "--directory", "public"]
+                // Fallback: simple Python HTTP server serving from serve/
+                serverProcess.arguments = ["python3", "-m", "http.server", "\(port)", "--directory", "serve"]
             }
             serverProcess.currentDirectoryURL = URL(fileURLWithPath: projectDir)
 
-            // Handle SIGINT gracefully
+            // Handle SIGINT gracefully — stop Tailwind watch and dev server
             let signalSource = DispatchSource.makeSignalSource(signal: SIGINT, queue: .main)
             signalSource.setEventHandler {
-                print("\nShutting down dev server...")
+                print("\nShutting down...")
+                tailwindProcess?.interrupt()
                 serverProcess.interrupt()
                 signalSource.cancel()
             }
@@ -95,6 +93,11 @@ extension Run {
 
             try serverProcess.run()
             serverProcess.waitUntilExit()
+
+            // Clean up Tailwind watch if still running
+            if let tp = tailwindProcess, tp.isRunning {
+                tp.interrupt()
+            }
         }
     }
 }
