@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pakLebah/ANSITerminal",
       "state" : {
-        "branch" : "master",
-        "revision" : "95f7cf132cb08d9eebd095b09214d8a375545e01"
+        "revision" : "8e24fab68c660eca1244a95019ec69a11400d62b",
+        "version" : "0.0.3"
       }
     },
     {
@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/eonist/FileWatcher.git",
       "state" : {
-        "branch" : "master",
-        "revision" : "ab3f80beac421dc5690c73e5c7c82c80e8c32a42"
+        "revision" : "e67c2a99502eade343fecabeca8c57e749a55b59",
+        "version" : "0.2.3"
       }
     },
     {
@@ -23,7 +23,6 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-argument-parser.git",
       "state" : {
-        "branch" : "main",
         "revision" : "a0f43bb719eb3ade9005818e72557ea023af0e60"
       }
     }

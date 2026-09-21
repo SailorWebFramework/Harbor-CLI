@@ -46,7 +46,7 @@ public class ResourceWatcher {
     let cwd: String = getCurrentWorkingDirectory()
 
     public init(file: String, title: String) throws {
-        guard isDirectory(atPath: String(self.cwd + "/\(file)")) else { throw CompassError.invalidDirectory }
+        guard isDirectory(atPath: String(self.cwd + "/\(file)")) else { throw HarborError.invalidDirectory }
         self.basePath = self.cwd + "/\(file)"
 
         print("Setting up watcher for \(self.basePath)")
@@ -61,4 +61,18 @@ public class ResourceWatcher {
     public func stop() {
         watcher.stop()
     }
+}
+
+/// Run a shell command and return whether it succeeded (exit code 0)
+@discardableResult
+public func shellCommand(_ executable: String, arguments: [String], workingDirectory: String? = nil) async throws -> Bool {
+    let process = Process()
+    process.executableURL = URL(fileURLWithPath: executable)
+    process.arguments = arguments
+    if let wd = workingDirectory {
+        process.currentDirectoryURL = URL(fileURLWithPath: wd)
+    }
+    try process.run()
+    process.waitUntilExit()
+    return process.terminationStatus == 0
 }

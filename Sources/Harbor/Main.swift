@@ -1,11 +1,11 @@
-import CompassCLI
-import CompassUtils
+import HarborCLI
+import HarborUtils
 import Foundation
 import ArgumentParser
 
 @main
 struct Main {
-  typealias Command = Compass
+  typealias Command = Harbor
 
   public static func main() async {
     do {
@@ -20,4 +20,3 @@ struct Main {
     }
   }
 }
-
