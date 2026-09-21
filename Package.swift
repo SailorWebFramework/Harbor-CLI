@@ -4,43 +4,49 @@
 import PackageDescription
 
 let package = Package(
-    name: "compass",
+    name: "harbor",
     platforms: [
         .macOS(.v13)
     ],
     products: [
-        .library(name: "CompassCLI", targets: ["CompassCLI"]),
-        .library(name: "CompassUtils", targets: ["CompassUtils"]),
-        .executable(name: "Compass", targets: ["Compass"])  
+        .library(name: "HarborCLI", targets: ["HarborCLI"]),
+        .library(name: "HarborUtils", targets: ["HarborUtils"]),
+        .executable(name: "harbor", targets: ["Harbor"])
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-argument-parser.git", branch: "main"),
-        .package(url: "https://github.com/pakLebah/ANSITerminal", branch: "master"),
-        .package(url: "https://github.com/eonist/FileWatcher.git", branch: "master")
+        .package(url: "https://github.com/apple/swift-argument-parser.git", revision: "a0f43bb719eb3ade9005818e72557ea023af0e60"),
+        .package(url: "https://github.com/pakLebah/ANSITerminal", from: "0.0.3"),
+        .package(url: "https://github.com/eonist/FileWatcher.git", from: "0.2.3")
 
     ],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
         .executableTarget(
-            name: "Compass",
+            name: "Harbor",
             dependencies: [
-                "CompassCLI",
+                "HarborCLI",
             ],
-            path: "Sources/Compass"),
+            path: "Sources/Harbor"),
         .target(
-            name: "CompassCLI",
+            name: "HarborCLI",
             dependencies: [
-                "CompassUtils"
+                "HarborUtils"
             ],
-            path: "Sources/CompassCLI"),
+            path: "Sources/HarborCLI"),
         .target(
-            name: "CompassUtils",
+            name: "HarborUtils",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 "ANSITerminal",
                 "FileWatcher"
             ],
-            path: "Sources/CompassUtils"),
+            path: "Sources/HarborUtils"),
+        .testTarget(
+            name: "HarborUtilsTests",
+            dependencies: ["HarborUtils"],
+            path: "Tests/HarborUtilsTests"),
+        .testTarget(
+            name: "HarborCLITests",
+            dependencies: ["HarborCLI", "HarborUtils"],
+            path: "Tests/HarborCLITests"),
     ]
 )

@@ -1,1 +1,0 @@
-public let compassVersion = "0.0.2"

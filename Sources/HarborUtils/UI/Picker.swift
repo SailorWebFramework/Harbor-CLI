@@ -3,7 +3,7 @@
 import ANSITerminal
 import Foundation
 
-public struct Option {
+public struct PickerOption {
     let title: String
     let line: Int
 
@@ -14,11 +14,11 @@ public struct Option {
 }
 
 public class OptionState {
-    let options: [Option]
+    let options: [PickerOption]
     let rangeOfLines: (minimum: Int, maximum: Int)
     var activeLine: Int = .zero
 
-    init(options: [Option], activeLine: Int, rangeOfLines: (minimum: Int, maximum: Int)) {
+    init(options: [PickerOption], activeLine: Int, rangeOfLines: (minimum: Int, maximum: Int)) {
         self.activeLine = activeLine
         self.rangeOfLines = rangeOfLines
         self.options = options
@@ -56,7 +56,7 @@ public func picker(title: String, options: [String]) -> String {
     let currentLine = readCursorPos().row + 1
     
     let state = OptionState(
-        options: options.enumerated().map { Option(title: $1, line: currentLine + $0) },
+        options: options.enumerated().map { PickerOption(title: $1, line: currentLine + $0) },
         activeLine: currentLine,
         rangeOfLines: (currentLine, currentLine + options.count - 1)
     )
